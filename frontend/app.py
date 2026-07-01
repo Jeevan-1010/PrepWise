@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 
+from backend.loader import load_dataset
 from backend.analyzer import analyze_dataset
 
 st.set_page_config(
@@ -19,20 +20,15 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
 
-    # Read dataset
-    if uploaded_file.name.endswith(".csv"):
-        df = pd.read_csv(uploaded_file)
-    else:
-        df = pd.read_excel(uploaded_file)
+    # Load dataset (Backend)
+    df = load_dataset(uploaded_file)
 
-    st.success(f"Uploaded: {uploaded_file.name}")
-
-    # Analyze dataset
+    # Analyze dataset (Backend)
     summary = analyze_dataset(df)
 
     # Dataset Preview
     st.write("## Dataset Preview")
-    st.dataframe(df.head(), use_container_width=True)
+    st.dataframe(df.head(), width="stretch")
 
     # Dataset Summary
     st.write("## Dataset Summary")
@@ -68,7 +64,7 @@ if uploaded_file is not None:
             "Category": category
         })
 
-    st.dataframe(pd.DataFrame(column_info), use_container_width=True)
+    st.dataframe(pd.DataFrame(column_info), width="stretch")
 
     # Missing Value Analysis
     st.write("## Missing Value Analysis")
@@ -79,13 +75,14 @@ if uploaded_file is not None:
         "Missing %": (df.isnull().sum() / len(df) * 100).round(2).values
     })
 
-    st.dataframe(missing_df, use_container_width=True)
+    st.dataframe(missing_df, width="stretch")
 
     # Issue Detection
     st.write("## 🚨 Issues Found")
 
     issues = []
 
+    # Missing values
     for column in df.columns:
         missing = df[column].isnull().sum()
 
@@ -95,6 +92,7 @@ if uploaded_file is not None:
                 f"❌ '{column}' has {missing} missing values ({percent:.2f}%)."
             )
 
+    # Duplicate rows
     duplicates = df.duplicated().sum()
 
     if duplicates > 0:
@@ -102,12 +100,14 @@ if uploaded_file is not None:
             f"❌ Dataset contains {duplicates} duplicate rows."
         )
 
+    # Identifier columns
     for column in df.columns:
         if df[column].nunique() == len(df):
             issues.append(
                 f"⚠️ '{column}' looks like an identifier column."
             )
 
+    # Display issues
     if issues:
         for issue in issues:
             st.warning(issue)
