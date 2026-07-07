@@ -1,8 +1,12 @@
 import streamlit as st
-import pandas as pd
 
 from backend.loader import load_dataset
-from backend.analyzer import analyze_dataset
+from backend.analyzer import (
+    analyze_dataset,
+    classify_columns,
+    analyze_missing_values,
+    detect_issues
+)
 
 st.set_page_config(
     page_title="PrepWise",
@@ -20,11 +24,14 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
 
-    # Load dataset (Backend)
+    # Load dataset
     df = load_dataset(uploaded_file)
 
-    # Analyze dataset (Backend)
+    # Backend Analysis
     summary = analyze_dataset(df)
+    column_info = classify_columns(df)
+    missing_df = analyze_missing_values(df)
+    issues = detect_issues(df)
 
     # Dataset Preview
     st.write("## Dataset Preview")
@@ -45,69 +52,15 @@ if uploaded_file is not None:
 
     # Column Classification
     st.write("## Column Classification")
-
-    column_info = []
-
-    for column in df.columns:
-        dtype = str(df[column].dtype)
-
-        if pd.api.types.is_numeric_dtype(df[column]):
-            category = "Numerical 🔢"
-        elif pd.api.types.is_datetime64_any_dtype(df[column]):
-            category = "Datetime 📅"
-        else:
-            category = "Categorical 📝"
-
-        column_info.append({
-            "Column": column,
-            "Data Type": dtype,
-            "Category": category
-        })
-
-    st.dataframe(pd.DataFrame(column_info), width="stretch")
+    st.dataframe(column_info, width="stretch")
 
     # Missing Value Analysis
     st.write("## Missing Value Analysis")
-
-    missing_df = pd.DataFrame({
-        "Column": df.columns,
-        "Missing Values": df.isnull().sum().values,
-        "Missing %": (df.isnull().sum() / len(df) * 100).round(2).values
-    })
-
     st.dataframe(missing_df, width="stretch")
 
     # Issue Detection
     st.write("## 🚨 Issues Found")
 
-    issues = []
-
-    # Missing values
-    for column in df.columns:
-        missing = df[column].isnull().sum()
-
-        if missing > 0:
-            percent = (missing / len(df)) * 100
-            issues.append(
-                f"❌ '{column}' has {missing} missing values ({percent:.2f}%)."
-            )
-
-    # Duplicate rows
-    duplicates = df.duplicated().sum()
-
-    if duplicates > 0:
-        issues.append(
-            f"❌ Dataset contains {duplicates} duplicate rows."
-        )
-
-    # Identifier columns
-    for column in df.columns:
-        if df[column].nunique() == len(df):
-            issues.append(
-                f"⚠️ '{column}' looks like an identifier column."
-            )
-
-    # Display issues
     if issues:
         for issue in issues:
             st.warning(issue)
