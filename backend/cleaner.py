@@ -1,76 +1,258 @@
+"""
+backend.cleaner
+
+Handles intelligent data cleaning and preprocessing.
+"""
+
+from __future__ import annotations
+
 import pandas as pd
+import numpy as np
+
+from sklearn.preprocessing import (
+    LabelEncoder,
+    StandardScaler,
+    MinMaxScaler,
+)
 
 
-def remove_duplicates(df):
-    """Remove duplicate rows."""
-    return df.drop_duplicates()
+class DataCleaner:
+    """
+    Intelligent data cleaning engine.
+    """
 
+    def __init__(self, dataframe: pd.DataFrame):
+        self.df = dataframe.copy()
 
-def drop_missing_rows(df):
-    """Remove rows containing missing values."""
-    return df.dropna()
+    # --------------------------------------------------
+    # Duplicate Handling
+    # --------------------------------------------------
 
+    def remove_duplicates(self) -> None:
+        """Remove duplicate rows."""
+        self.df.drop_duplicates(inplace=True)
 
-def fill_missing_mean(df):
-    """Fill numeric missing values with mean."""
+    # --------------------------------------------------
+    # Missing Values
+    # --------------------------------------------------
 
-    df = df.copy()
+    def fill_missing(
+        self,
+        strategy: str = "mean",
+    ) -> None:
+        """
+        Fill missing values.
 
-    numeric_columns = df.select_dtypes(include="number").columns
+        Strategies:
+        mean
+        median
+        mode
+        """
 
-    for column in numeric_columns:
-        df[column] = df[column].fillna(df[column].mean())
+        numeric = self.df.select_dtypes(include=np.number).columns
 
-    return df
+        categorical = self.df.select_dtypes(
+            exclude=np.number
+        ).columns
 
+        if strategy == "mean":
 
-def fill_missing_median(df):
-    """Fill numeric missing values with median."""
+            for col in numeric:
+                self.df[col] = self.df[col].fillna(
+                    self.df[col].mean()
+                )
 
-    df = df.copy()
+        elif strategy == "median":
 
-    numeric_columns = df.select_dtypes(include="number").columns
+            for col in numeric:
+                self.df[col] = self.df[col].fillna(
+                    self.df[col].median()
+                )
 
-    for column in numeric_columns:
-        df[column] = df[column].fillna(df[column].median())
+        elif strategy == "mode":
 
-    return df
+            for col in self.df.columns:
+                self.df[col] = self.df[col].fillna(
+                    self.df[col].mode().iloc[0]
+                )
 
+        for col in categorical:
 
-def fill_missing_mode(df):
-    """Fill missing values using mode."""
+            self.df[col] = self.df[col].fillna(
+                "Unknown"
+            )
 
-    df = df.copy()
+    # --------------------------------------------------
+    # Drop Missing Rows
+    # --------------------------------------------------
 
-    for column in df.columns:
+    def drop_missing_rows(self) -> None:
+        """Drop rows containing missing values."""
+        self.df.dropna(inplace=True)
 
-        mode = df[column].mode()
+    # --------------------------------------------------
+    # Drop Columns
+    # --------------------------------------------------
 
-        if not mode.empty:
-            df[column] = df[column].fillna(mode.iloc[0])
+    def drop_columns(
+        self,
+        columns: list[str],
+    ) -> None:
 
-    return df
+        self.df.drop(
+            columns=columns,
+            inplace=True,
+            errors="ignore",
+        )
 
+    # --------------------------------------------------
+    # Rename Columns
+    # --------------------------------------------------
 
-def drop_columns(df, columns):
-    """Drop selected columns."""
+    def clean_column_names(self) -> None:
 
-    return df.drop(columns=columns)
+        self.df.columns = (
+            self.df.columns
+            .str.strip()
+            .str.lower()
+            .str.replace(" ", "_")
+        )
 
+    # --------------------------------------------------
+    # Remove Constant Columns
+    # --------------------------------------------------
 
-def rename_column(df, old_name, new_name):
-    """Rename a column."""
+    def remove_constant_columns(self) -> None:
 
-    return df.rename(columns={
-        old_name: new_name
-    })
+        constant = [
+            col
+            for col in self.df.columns
+            if self.df[col].nunique() <= 1
+        ]
 
+        self.df.drop(
+            columns=constant,
+            inplace=True,
+        )
 
-def convert_dtype(df, column, dtype):
-    """Convert column datatype."""
+    # --------------------------------------------------
+    # Encode Categories
+    # --------------------------------------------------
 
-    df = df.copy()
+    def label_encode(self) -> None:
 
-    df[column] = df[column].astype(dtype)
+        categorical = self.df.select_dtypes(
+            include="object"
+        ).columns
 
-    return df
+        encoder = LabelEncoder()
+
+        for col in categorical:
+
+            self.df[col] = encoder.fit_transform(
+                self.df[col].astype(str)
+            )
+
+    # --------------------------------------------------
+    # Scaling
+    # --------------------------------------------------
+
+    def standard_scale(self) -> None:
+
+        numeric = self.df.select_dtypes(
+            include=np.number
+        ).columns
+
+        scaler = StandardScaler()
+
+        self.df[numeric] = scaler.fit_transform(
+            self.df[numeric]
+        )
+
+    def minmax_scale(self) -> None:
+
+        numeric = self.df.select_dtypes(
+            include=np.number
+        ).columns
+
+        scaler = MinMaxScaler()
+
+        self.df[numeric] = scaler.fit_transform(
+            self.df[numeric]
+        )
+
+    # --------------------------------------------------
+    # Outlier Removal
+    # --------------------------------------------------
+
+    def remove_outliers_iqr(self) -> None:
+
+        numeric = self.df.select_dtypes(
+            include=np.number
+        )
+
+        mask = pd.Series(
+            True,
+            index=self.df.index,
+        )
+
+        for column in numeric.columns:
+
+            q1 = numeric[column].quantile(0.25)
+            q3 = numeric[column].quantile(0.75)
+
+            iqr = q3 - q1
+
+            lower = q1 - 1.5 * iqr
+            upper = q3 + 1.5 * iqr
+
+            mask &= (
+                (self.df[column] >= lower)
+                &
+                (self.df[column] <= upper)
+            )
+
+        self.df = self.df[mask]
+
+    # --------------------------------------------------
+    # Datetime Conversion
+    # --------------------------------------------------
+
+    def convert_datetime(self) -> None:
+
+        for col in self.df.columns:
+
+            try:
+                converted = pd.to_datetime(
+                    self.df[col],
+                    errors="raise",
+                )
+
+                self.df[col] = converted
+
+            except Exception:
+                pass
+
+    # --------------------------------------------------
+    # Full Pipeline
+    # --------------------------------------------------
+
+    def clean(
+        self,
+        fill_strategy: str = "median",
+    ) -> pd.DataFrame:
+        """
+        Execute complete cleaning pipeline.
+        """
+
+        self.clean_column_names()
+
+        self.remove_duplicates()
+
+        self.fill_missing(fill_strategy)
+
+        self.remove_constant_columns()
+
+        self.convert_datetime()
+
+        return self.df
