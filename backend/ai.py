@@ -1,75 +1,194 @@
-import pandas as pd
+"""
+backend.ai
+
+Gemini AI integration for PrepWise.
+"""
+
+from __future__ import annotations
+
+import os
+from typing import Optional
+
+from dotenv import load_dotenv
+from google import genai
 
 
-def build_dataset_summary(df):
+load_dotenv()
+
+
+class AIService:
     """
-    Build a concise summary of the dataset
-    to send to the AI model.
-    """
-
-    summary = {
-        "rows": len(df),
-        "columns": len(df.columns),
-        "missing_values": int(df.isnull().sum().sum()),
-        "duplicate_rows": int(df.duplicated().sum()),
-        "column_types": {}
-    }
-
-    for column in df.columns:
-        summary["column_types"][column] = str(df[column].dtype)
-
-    return summary
-
-
-def build_prompt(df):
-    """
-    Build a prompt for the AI model.
+    Gemini AI service.
     """
 
-    summary = build_dataset_summary(df)
+    def __init__(self) -> None:
 
-    prompt = f"""
-You are an expert data scientist.
+        api_key = os.getenv("GEMINI_API_KEY")
 
-Analyze the following dataset summary and provide recommendations.
+        if not api_key:
+            raise ValueError(
+                "GEMINI_API_KEY not found in environment variables."
+            )
+
+        self.client = genai.Client(api_key=api_key)
+
+        self.model = "gemini-2.5-flash"
+
+    # -------------------------------------------------------
+    # Generic Prompt
+    # -------------------------------------------------------
+
+    def ask(
+        self,
+        prompt: str,
+    ) -> str:
+
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=prompt,
+        )
+
+        return response.text
+
+    # -------------------------------------------------------
+    # Dataset Analysis
+    # -------------------------------------------------------
+
+    def analyze_dataset(
+        self,
+        report: dict,
+    ) -> str:
+
+        prompt = f"""
+You are PrepWise AI.
+
+You are a professional data scientist.
+
+Analyze the following dataset summary.
 
 Dataset Summary
----------------
-Rows: {summary['rows']}
-Columns: {summary['columns']}
-Missing Values: {summary['missing_values']}
-Duplicate Rows: {summary['duplicate_rows']}
 
-Column Types:
+{report}
+
+Explain:
+
+1. Overall quality
+
+2. Missing values
+
+3. Duplicate rows
+
+4. Potential issues
+
+5. Recommended preprocessing
+
+6. Suggested ML models
+
+7. Business insights
+
+Respond in professional markdown.
 """
 
-    for column, dtype in summary["column_types"].items():
-        prompt += f"\n- {column}: {dtype}"
+        return self.ask(prompt)
 
-    prompt += """
+    # -------------------------------------------------------
+    # Cleaning Suggestions
+    # -------------------------------------------------------
 
-Please provide:
+    def cleaning_recommendations(
+        self,
+        report: dict,
+    ) -> str:
 
-1. Dataset quality score (0-100)
-2. Major issues found
-3. Recommended cleaning steps
-4. Feature engineering suggestions
-5. Machine Learning readiness
+        prompt = f"""
+You are an expert data engineer.
+
+Dataset Information
+
+{report}
+
+Suggest:
+
+- Missing value strategy
+- Outlier handling
+- Encoding
+- Scaling
+- Feature engineering
+- ML readiness
+
+Explain every recommendation.
 """
 
-    return prompt
+        return self.ask(prompt)
 
+    # -------------------------------------------------------
+    # Feature Engineering
+    # -------------------------------------------------------
 
-def get_ai_recommendation(df):
-    """
-    Placeholder until Gemini integration.
-    """
+    def feature_engineering(
+        self,
+        columns: list[str],
+    ) -> str:
 
-    return {
-        "status": "Not Connected",
-        "message": (
-            "AI integration will be enabled after "
-            "connecting Gemini API."
-        ),
-        "prompt": build_prompt(df)
-    }
+        prompt = f"""
+Columns
+
+{columns}
+
+Suggest useful feature engineering ideas.
+
+Include:
+
+- Encoding
+- Scaling
+- Feature combinations
+- Date features
+- Target leakage warnings
+"""
+
+        return self.ask(prompt)
+
+    # -------------------------------------------------------
+    # Dashboard Insights
+    # -------------------------------------------------------
+
+    def dashboard_summary(
+        self,
+        report: dict,
+    ) -> str:
+
+        prompt = f"""
+Generate an executive summary.
+
+Dataset
+
+{report}
+
+Keep it concise.
+
+Maximum 250 words.
+"""
+
+        return self.ask(prompt)
+
+    # -------------------------------------------------------
+    # Custom Chat
+    # -------------------------------------------------------
+
+    def chat(
+        self,
+        message: str,
+        context: Optional[dict] = None,
+    ) -> str:
+
+        prompt = f"""
+Context
+
+{context}
+
+Question
+
+{message}
+"""
+
+        return self.ask(prompt)
