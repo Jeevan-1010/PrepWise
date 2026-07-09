@@ -1,124 +1,107 @@
 """
-cleaning.py
+frontend.cleaning
 
-Provides the data cleaning interface for PrepWise.
+Cleaning page for PrepWise.
 """
 
-from typing import Optional
+from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
 
-from backend.cleaner import (
-    remove_duplicates,
-    fill_missing_values,
-    drop_missing_rows,
-    drop_columns,
-)
+from backend.cleaner import DataCleaner
 
 
-def render_cleaning_panel(df: pd.DataFrame) -> Optional[pd.DataFrame]:
-    """
-    Render the data cleaning controls.
+class CleaningPage:
 
-    Args:
-        df: Input DataFrame.
+    def __init__(self, dataframe: pd.DataFrame):
+        self.df = dataframe.copy()
 
-    Returns:
-        Cleaned DataFrame.
-    """
+    def render(self):
 
-    st.subheader("Data Cleaning")
+        st.title("Data Cleaning")
 
-    cleaned_df = df.copy()
-
-    st.markdown("Choose the cleaning operations to apply.")
-
-    st.divider()
-
-    # --------------------------------------------------
-    # Duplicate Removal
-    # --------------------------------------------------
-
-    remove_dup = st.checkbox(
-        "Remove Duplicate Rows",
-        value=False
-    )
-
-    if remove_dup:
-        cleaned_df = remove_duplicates(cleaned_df)
-
-    # --------------------------------------------------
-    # Missing Values
-    # --------------------------------------------------
-
-    st.markdown("### Missing Value Handling")
-
-    method = st.selectbox(
-        "Choose a strategy",
-        (
-            "None",
-            "Mean",
-            "Median",
-            "Mode",
-            "Drop Rows"
-        )
-    )
-
-    if method == "Mean":
-        cleaned_df = fill_missing_values(
-            cleaned_df,
-            strategy="mean"
+        st.write(
+            "Configure how PrepWise should clean your dataset."
         )
 
-    elif method == "Median":
-        cleaned_df = fill_missing_values(
-            cleaned_df,
-            strategy="median"
+        st.divider()
+
+        fill_strategy = st.selectbox(
+            "Missing Value Strategy",
+            [
+                "mean",
+                "median",
+                "mode",
+            ],
         )
 
-    elif method == "Mode":
-        cleaned_df = fill_missing_values(
-            cleaned_df,
-            strategy="mode"
+        remove_duplicates = st.checkbox(
+            "Remove Duplicate Rows",
+            value=True,
         )
 
-    elif method == "Drop Rows":
-        cleaned_df = drop_missing_rows(cleaned_df)
-
-    st.divider()
-
-    # --------------------------------------------------
-    # Drop Columns
-    # --------------------------------------------------
-
-    selected_columns = st.multiselect(
-        "Drop Columns",
-        cleaned_df.columns.tolist()
-    )
-
-    if selected_columns:
-        cleaned_df = drop_columns(
-            cleaned_df,
-            selected_columns
+        remove_outliers = st.checkbox(
+            "Remove Outliers (IQR)",
+            value=True,
         )
 
-    st.divider()
+        encode = st.checkbox(
+            "Label Encode Categorical Columns"
+        )
 
-    st.success("Cleaning operations are ready.")
+        scale = st.selectbox(
+            "Scaling",
+            [
+                "None",
+                "Standard",
+                "MinMax",
+            ],
+        )
 
-    return cleaned_df
+        if st.button(
+            "Start Cleaning",
+            use_container_width=True,
+        ):
 
+            cleaner = DataCleaner(self.df)
 
-def render_cleaned_preview(df: pd.DataFrame) -> None:
-    """
-    Display the cleaned dataset.
-    """
+            cleaner.clean_column_names()
 
-    st.subheader("Cleaned Dataset Preview")
+            if remove_duplicates:
+                cleaner.remove_duplicates()
 
-    st.dataframe(
-        df.head(),
-        width="stretch",
-        hide_index=True
-    )
+            cleaner.fill_missing(fill_strategy)
+
+            cleaner.remove_constant_columns()
+
+            cleaner.convert_datetime()
+
+            if remove_outliers:
+                cleaner.remove_outliers_iqr()
+
+            if encode:
+                cleaner.label_encode()
+
+            if scale == "Standard":
+                cleaner.standard_scale()
+
+            elif scale == "MinMax":
+                cleaner.minmax_scale()
+
+            cleaned = cleaner.df
+
+            st.success("Dataset cleaned successfully.")
+
+            st.subheader("Preview")
+
+            st.dataframe(
+                cleaned,
+                use_container_width=True,
+            )
+
+            st.session_state["cleaned_df"] = cleaned
+
+            return cleaned
+
+        return None
