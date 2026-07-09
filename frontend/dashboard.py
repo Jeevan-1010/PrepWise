@@ -1,127 +1,250 @@
 """
-dashboard.py
+frontend.dashboard
 
-Displays dataset statistics, previews and analysis.
+Main dashboard for PrepWise.
 """
 
-from typing import Dict
+from __future__ import annotations
 
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 
-def render_overview(df: pd.DataFrame) -> None:
-    """
-    Display dataset overview metrics.
-    """
+class Dashboard:
 
-    st.subheader("Dataset Overview")
+    def __init__(self, dataframe: pd.DataFrame):
+        self.df = dataframe
 
-    rows = len(df)
-    columns = len(df.columns)
-    missing = int(df.isnull().sum().sum())
-    duplicates = int(df.duplicated().sum())
+    # --------------------------------------------------
+    # KPI Cards
+    # --------------------------------------------------
 
-    col1, col2, col3, col4 = st.columns(4)
+    def render_metrics(self):
 
-    col1.metric("Rows", f"{rows:,}")
-    col2.metric("Columns", columns)
-    col3.metric("Missing Values", missing)
-    col4.metric("Duplicate Rows", duplicates)
+        rows = len(self.df)
 
+        cols = len(self.df.columns)
 
-def render_preview(df: pd.DataFrame) -> None:
-    """
-    Display dataset preview.
-    """
+        missing = int(self.df.isna().sum().sum())
 
-    st.subheader("Dataset Preview")
+        duplicates = int(self.df.duplicated().sum())
 
-    st.dataframe(
-        df.head(),
-        width="stretch",
-        hide_index=True
-    )
+        c1, c2, c3, c4 = st.columns(4)
 
+        c1.metric(
+            "Rows",
+            f"{rows:,}",
+        )
 
-def render_data_types(df: pd.DataFrame) -> None:
-    """
-    Display column data types.
-    """
+        c2.metric(
+            "Columns",
+            cols,
+        )
 
-    st.subheader("Column Data Types")
+        c3.metric(
+            "Missing Values",
+            missing,
+        )
 
-    dtype_df = pd.DataFrame({
-        "Column": df.columns,
-        "Data Type": df.dtypes.astype(str)
-    })
+        c4.metric(
+            "Duplicate Rows",
+            duplicates,
+        )
 
-    st.dataframe(
-        dtype_df,
-        width="stretch",
-        hide_index=True
-    )
+    # --------------------------------------------------
+    # Dataset Preview
+    # --------------------------------------------------
 
+    def render_preview(self):
 
-def render_missing_values(df: pd.DataFrame) -> None:
-    """
-    Display missing values analysis.
-    """
+        st.subheader("Dataset Preview")
 
-    st.subheader("Missing Values")
+        st.dataframe(
+            self.df,
+            use_container_width=True,
+            height=400,
+        )
 
-    missing_df = pd.DataFrame({
-        "Column": df.columns,
-        "Missing Values": df.isnull().sum().values,
-        "Percentage": (
-            (df.isnull().sum() / len(df)) * 100
-        ).round(2).astype(str) + "%"
-    })
+    # --------------------------------------------------
+    # Missing Values
+    # --------------------------------------------------
 
-    st.dataframe(
-        missing_df,
-        width="stretch",
-        hide_index=True
-    )
+    def render_missing_chart(self):
 
+        missing = (
+            self.df.isna()
+            .sum()
+            .reset_index()
+        )
 
-def render_numeric_summary(df: pd.DataFrame) -> None:
-    """
-    Display summary statistics.
-    """
+        missing.columns = [
+            "Column",
+            "Missing",
+        ]
 
-    numeric_df = df.select_dtypes(include="number")
+        fig = px.bar(
+            missing,
+            x="Column",
+            y="Missing",
+            title="Missing Values",
+        )
 
-    if numeric_df.empty:
-        return
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+        )
 
-    st.subheader("Summary Statistics")
+    # --------------------------------------------------
+    # Correlation
+    # --------------------------------------------------
 
-    st.dataframe(
-        numeric_df.describe().T,
-        width="stretch"
-    )
+    def render_correlation(self):
 
+        numeric = self.df.select_dtypes(
+            include="number",
+        )
 
-def render_analysis(results: Dict, df: pd.DataFrame) -> None:
-    """
-    Render the complete dashboard.
-    """
+        if numeric.shape[1] < 2:
+            return
 
-    render_overview(df)
+        corr = numeric.corr()
 
-    st.divider()
+        fig = px.imshow(
+            corr,
+            text_auto=".2f",
+            title="Correlation Matrix",
+        )
 
-    render_preview(df)
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+        )
 
-    st.divider()
+    # --------------------------------------------------
+    # Distributions
+    # --------------------------------------------------
 
-    render_data_types(df)
+    def render_distributions(self):
 
-    st.divider()
+        numeric = self.df.select_dtypes(
+            include="number",
+        ).columns
 
-    render_missing_values(df)
+        if len(numeric) == 0:
+            return
 
-    st.divider()
+        column = st.selectbox(
+            "Distribution",
+            numeric,
+        )
 
-    render_numeric_summary(df)
+        fig = px.histogram(
+            self.df,
+            x=column,
+            nbins=40,
+            title=f"{column} Distribution",
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+        )
+
+    # --------------------------------------------------
+    # Scatter Plot
+    # --------------------------------------------------
+
+    def render_scatter(self):
+
+        numeric = self.df.select_dtypes(
+            include="number",
+        ).columns.tolist()
+
+        if len(numeric) < 2:
+            return
+
+        c1, c2 = st.columns(2)
+
+        x = c1.selectbox(
+            "X Axis",
+            numeric,
+            key="scatter_x",
+        )
+
+        y = c2.selectbox(
+            "Y Axis",
+            numeric,
+            index=1,
+            key="scatter_y",
+        )
+
+        fig = px.scatter(
+            self.df,
+            x=x,
+            y=y,
+            title=f"{x} vs {y}",
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+        )
+
+    # --------------------------------------------------
+    # Data Types
+    # --------------------------------------------------
+
+    def render_datatypes(self):
+
+        st.subheader("Column Types")
+
+        dtype = pd.DataFrame(
+            {
+                "Column": self.df.columns,
+                "Data Type": self.df.dtypes.astype(str),
+            }
+        )
+
+        st.dataframe(
+            dtype,
+            use_container_width=True,
+        )
+
+    # --------------------------------------------------
+    # Dashboard
+    # --------------------------------------------------
+
+    def render(self):
+
+        st.title("PrepWise Dashboard")
+
+        self.render_metrics()
+
+        st.divider()
+
+        self.render_preview()
+
+        st.divider()
+
+        c1, c2 = st.columns(2)
+
+        with c1:
+            self.render_missing_chart()
+
+        with c2:
+            self.render_correlation()
+
+        st.divider()
+
+        c3, c4 = st.columns(2)
+
+        with c3:
+            self.render_distributions()
+
+        with c4:
+            self.render_scatter()
+
+        st.divider()
+
+        self.render_datatypes()
