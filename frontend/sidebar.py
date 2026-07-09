@@ -1,93 +1,121 @@
 """
-sidebar.py
+frontend.sidebar
 
-Handles all Streamlit sidebar components.
+Sidebar component for PrepWise.
 """
 
-from typing import Optional
+from __future__ import annotations
 
 import streamlit as st
 
 
-def render_sidebar() -> Optional[object]:
-    """
-    Render the application sidebar.
+class Sidebar:
 
-    Returns:
-        Uploaded file object if a file is selected,
-        otherwise None.
-    """
+    def __init__(self):
+        pass
 
-    with st.sidebar:
+    def render(self):
 
-        st.title("PrepWise")
+        with st.sidebar:
 
-        st.caption("AI-Powered Data Cleaning Assistant")
+            st.markdown(
+                """
+                # PrepWise
 
-        st.divider()
+                **AI-Powered Data Preparation Platform**
+                """
+            )
 
-        uploaded_file = st.file_uploader(
-            "Upload Dataset",
-            type=["csv", "xlsx"],
-            help="Supported formats: CSV and Excel (.xlsx)"
-        )
+            st.divider()
 
-        st.divider()
+            uploaded_file = st.file_uploader(
+                "Upload Dataset",
+                type=[
+                    "csv",
+                    "xlsx",
+                ],
+            )
 
-        st.subheader("Supported Files")
+            st.divider()
 
-        st.markdown(
-            """
-            - CSV (.csv)
-            - Excel (.xlsx)
-            """
-        )
+            st.subheader("Cleaning Options")
 
-        st.divider()
+            fill_strategy = st.selectbox(
+                "Missing Value Strategy",
+                [
+                    "mean",
+                    "median",
+                    "mode",
+                ],
+            )
 
-        st.subheader("Workflow")
+            remove_duplicates = st.checkbox(
+                "Remove Duplicate Rows",
+                value=True,
+            )
 
-        st.markdown(
-            """
-            1. Upload Dataset
-            2. Analyze Dataset
-            3. Clean Data
-            4. Download Clean Dataset
-            """
-        )
+            remove_outliers = st.checkbox(
+                "Remove Outliers",
+                value=True,
+            )
 
-        st.divider()
+            encode = st.checkbox(
+                "Encode Categorical Columns",
+                value=False,
+            )
 
-        st.caption("PrepWise v1.0")
+            standardize = st.checkbox(
+                "Standard Scale",
+                value=False,
+            )
 
-    return uploaded_file
+            st.divider()
 
+            st.subheader("Machine Learning")
 
-def show_dataset_info(df) -> None:
-    """
-    Display dataset information in the sidebar.
+            run_clustering = st.checkbox(
+                "KMeans Clustering",
+                value=True,
+            )
 
-    Args:
-        df: Loaded pandas DataFrame.
-    """
+            run_outlier_detection = st.checkbox(
+                "Isolation Forest",
+                value=True,
+            )
 
-    with st.sidebar:
+            run_pca = st.checkbox(
+                "PCA Projection",
+                value=True,
+            )
 
-        st.divider()
+            st.divider()
 
-        st.subheader("Dataset Information")
+            analyze = st.button(
+                "Analyze Dataset",
+                use_container_width=True,
+            )
 
-        col1, col2 = st.columns(2)
+            clean = st.button(
+                "Clean Dataset",
+                use_container_width=True,
+            )
 
-        with col1:
-            st.metric("Rows", len(df))
+            ai = st.button(
+                "AI Recommendations",
+                use_container_width=True,
+            )
 
-        with col2:
-            st.metric("Columns", len(df.columns))
-
-        memory = df.memory_usage(deep=True).sum() / (1024 ** 2)
-
-        st.metric(
-            "Memory Usage",
-            f"{memory:.2f} MB"
-        )
+            return {
+                "file": uploaded_file,
+                "fill_strategy": fill_strategy,
+                "remove_duplicates": remove_duplicates,
+                "remove_outliers": remove_outliers,
+                "encode": encode,
+                "standardize": standardize,
+                "run_clustering": run_clustering,
+                "run_outlier_detection": run_outlier_detection,
+                "run_pca": run_pca,
+                "analyze": analyze,
+                "clean": clean,
+                "ai": ai,
+            }
