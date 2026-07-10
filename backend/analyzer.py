@@ -27,13 +27,15 @@ class DatasetAnalyzer:
     # ----------------------------------------------------
 
     def basic_summary(self) -> dict:
+
         return {
             "rows": len(self.df),
             "columns": len(self.df.columns),
             "missing_values": int(self.df.isna().sum().sum()),
             "duplicate_rows": int(self.df.duplicated().sum()),
             "memory_mb": round(
-                self.df.memory_usage(deep=True).sum() / (1024 ** 2),
+                self.df.memory_usage(deep=True).sum()
+                / (1024 ** 2),
                 2,
             ),
         }
@@ -75,7 +77,9 @@ class DatasetAnalyzer:
 
     def summary_statistics(self) -> pd.DataFrame:
 
-        numeric = self.df.select_dtypes(include=np.number)
+        numeric = self.df.select_dtypes(
+            include=np.number
+        )
 
         if numeric.empty:
             return pd.DataFrame()
@@ -88,7 +92,9 @@ class DatasetAnalyzer:
 
     def correlation_matrix(self) -> pd.DataFrame:
 
-        numeric = self.df.select_dtypes(include=np.number)
+        numeric = self.df.select_dtypes(
+            include=np.number
+        )
 
         if numeric.shape[1] < 2:
             return pd.DataFrame()
@@ -114,45 +120,86 @@ class DatasetAnalyzer:
         score -= constant_columns * 5
 
         return round(max(score, 0), 2)
-
     # ----------------------------------------------------
     # Isolation Forest
     # ----------------------------------------------------
 
+    
     def detect_outliers(self) -> pd.Series:
 
-        numeric = self.df.select_dtypes(include=np.number)
+        numeric = self.df.select_dtypes(
+            include=np.number
+        )
 
-        if numeric.shape[1] == 0:
+        if numeric.empty:
             return pd.Series(dtype=int)
 
-        clean = numeric.fillna(numeric.mean())
+        clean = numeric.copy()
+
+        clean = clean.dropna(
+            axis=1,
+            how="all",
+        )
+
+        if clean.empty:
+            return pd.Series(dtype=int)
+
+        clean = clean.fillna(
+            clean.mean()
+        )
+
+        clean = clean.replace(
+            [np.inf, -np.inf],
+            np.nan,
+        )
+
+        clean = clean.fillna(0)
 
         model = IsolationForest(
             contamination=0.05,
             random_state=42,
         )
 
-        return pd.Series(
-            model.fit_predict(clean),
-            index=self.df.index,
+        labels = model.fit_predict(
+            clean
         )
+
+        return pd.Series(
+            labels,
+            index=self.df.index,
+    )
 
     # ----------------------------------------------------
     # KMeans Clustering
     # ----------------------------------------------------
 
     def cluster_data(
-        self,
-        n_clusters: int = 3,
+    self,
+    n_clusters: int = 3,
     ) -> pd.Series:
 
         numeric = self.df.select_dtypes(include=np.number)
 
-        if numeric.shape[1] == 0:
+        if numeric.empty:
             return pd.Series(dtype=int)
 
-        clean = numeric.fillna(numeric.mean())
+        clean = numeric.copy()
+
+        # Remove columns that are completely NaN
+        clean = clean.dropna(axis=1, how="all")
+
+        if clean.empty:
+            return pd.Series(dtype=int)
+
+        # Fill remaining NaNs
+        clean = clean.fillna(clean.mean())
+
+        # Replace any leftover NaNs/Infs
+        clean = clean.replace([np.inf, -np.inf], np.nan)
+        clean = clean.fillna(0)
+
+        if len(clean) < n_clusters:
+            n_clusters = max(1, len(clean))
 
         model = KMeans(
             n_clusters=n_clusters,
@@ -162,10 +209,7 @@ class DatasetAnalyzer:
 
         labels = model.fit_predict(clean)
 
-        return pd.Series(
-            labels,
-            index=self.df.index,
-        )
+        return pd.Series(labels, index=self.df.index)
 
     # ----------------------------------------------------
     # PCA
@@ -178,10 +222,21 @@ class DatasetAnalyzer:
 
         numeric = self.df.select_dtypes(include=np.number)
 
-        if numeric.shape[1] < components:
+        if numeric.empty:
             return pd.DataFrame()
 
-        clean = numeric.fillna(numeric.mean())
+        clean = numeric.copy()
+
+        clean = clean.replace([np.inf, -np.inf], np.nan)
+
+        for col in clean.columns:
+            clean[col] = pd.to_numeric(clean[col], errors="coerce")
+
+        clean = clean.fillna(clean.mean(numeric_only=True))
+        clean = clean.fillna(0)
+
+        if clean.shape[1] < components:
+            return pd.DataFrame()
 
         pca = PCA(
             n_components=components,
@@ -190,16 +245,55 @@ class DatasetAnalyzer:
 
         transformed = pca.fit_transform(clean)
 
-        columns = [
-            f"PC{i+1}"
-            for i in range(components)
-        ]
-
         return pd.DataFrame(
             transformed,
-            columns=columns,
+            columns=[f"PC{i+1}" for i in range(components)],
         )
 
+    def detect_outliers(self) -> pd.Series:
+
+        numeric = self.df.select_dtypes(
+            include=np.number
+        )
+
+        if numeric.empty:
+            return pd.Series(dtype=int)
+
+        clean = numeric.copy()
+
+        clean = clean.dropna(
+            axis=1,
+            how="all",
+        )
+
+        if clean.empty:
+            return pd.Series(dtype=int)
+
+        clean = clean.fillna(
+            clean.mean()
+        )
+
+        clean = clean.replace(
+            [np.inf, -np.inf],
+            np.nan,
+        )
+
+        clean = clean.fillna(0)
+
+        model = IsolationForest(
+            contamination=0.05,
+            random_state=42,
+        )
+
+        labels = model.fit_predict(
+            clean
+        )
+
+        return pd.Series(
+            labels,
+            index=self.df.index,
+        )
+           
     # ----------------------------------------------------
     # Complete Analysis
     # ----------------------------------------------------
@@ -217,3 +311,8 @@ class DatasetAnalyzer:
             "clusters": self.cluster_data(),
             "pca": self.pca_projection(),
         }
+    # ----------------------------------------------------
+    # PCA Projection
+    # ----------------------------------------------------
+
+    

@@ -1,0 +1,732 @@
+/* ===========================================================
+   PREPWISE
+   Modern SaaS Dashboard Theme
+=========================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+html,
+body,
+[class*="css"]{
+
+    font-family:"Inter",sans-serif;
+
+}
+
+.stApp{
+
+    background:#0d1117;
+
+    color:#ffffff;
+
+}
+
+/* ===========================================================
+   MAIN CONTAINER
+=========================================================== */
+
+.block-container{
+
+    max-width:1450px;
+
+    padding-top:2rem;
+
+    padding-left:2rem;
+
+    padding-right:2rem;
+
+    padding-bottom:3rem;
+
+}
+
+/* ===========================================================
+   SIDEBAR
+=========================================================== */
+
+section[data-testid="stSidebar"]{
+
+    background:#111827;
+
+    border-right:1px solid rgba(255,255,255,.08);
+
+}
+
+section[data-testid="stSidebar"] h1{
+
+    color:white;
+
+    font-weight:700;
+
+}
+
+section[data-testid="stSidebar"] h2{
+
+    color:white;
+
+}
+
+section[data-testid="stSidebar"] h3{
+
+    color:white;
+
+}
+
+/* ===========================================================
+   TITLES
+=========================================================== */
+
+h1{
+
+    color:white;
+
+    font-size:2.5rem;
+
+    font-weight:800;
+
+}
+
+h2{
+
+    color:white;
+
+    font-weight:700;
+
+}
+
+h3{
+
+    color:white;
+
+    font-weight:600;
+
+}
+
+p{
+
+    color:#d4d4d4;
+
+}
+
+/* ===========================================================
+   METRIC CARDS
+=========================================================== */
+
+[data-testid="metric-container"]{
+
+    background:#161b22;
+
+    border-radius:18px;
+
+    padding:18px;
+
+    border:1px solid rgba(255,255,255,.06);
+
+    transition:.25s;
+
+}
+
+[data-testid="metric-container"]:hover{
+
+    transform:translateY(-5px);
+
+    box-shadow:0 12px 35px rgba(0,0,0,.35);
+
+}
+
+/* ===========================================================
+   BUTTONS
+=========================================================== */
+
+.stButton>button{
+
+    width:100%;
+
+    background:linear-gradient(
+
+        135deg,
+
+        #5B6CFF,
+
+        #7D4CFF
+
+    );
+
+    color:white;
+
+    border:none;
+
+    border-radius:14px;
+
+    padding:.85rem;
+
+    font-weight:600;
+
+    transition:.25s;
+
+}
+
+.stButton>button:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:0 15px 35px rgba(91,108,255,.35);
+
+}
+
+/* ===========================================================
+   DOWNLOAD BUTTONS
+=========================================================== */
+
+.stDownloadButton>button{
+
+    width:100%;
+
+    background:#1c2430;
+
+    color:white;
+
+    border:none;
+
+    border-radius:14px;
+
+    padding:.85rem;
+
+    transition:.25s;
+
+}
+
+.stDownloadButton>button:hover{
+
+    background:#5B6CFF;
+
+}
+
+/* ===========================================================
+   DIVIDER
+=========================================================== */
+
+hr{
+
+    border:none;
+
+    border-top:1px solid rgba(255,255,255,.08);
+
+}
+
+/* ===========================================================
+   SUCCESS / WARNING
+=========================================================== */
+
+.stSuccess{
+
+    border-radius:15px;
+
+}
+
+.stWarning{
+
+    border-radius:15px;
+
+}
+
+.stError{
+
+    border-radius:15px;
+
+}
+
+.stInfo{
+
+    border-radius:15px;
+
+}
+
+/* ===========================================================
+   INPUTS
+=========================================================== */
+
+.stTextInput input,
+.stNumberInput input,
+.stTextArea textarea{
+
+    background:#161b22;
+
+    color:white;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    border-radius:12px;
+
+}
+
+.stTextInput input:focus,
+.stNumberInput input:focus,
+.stTextArea textarea:focus{
+
+    border-color:#5B6CFF;
+
+    box-shadow:0 0 10px rgba(91,108,255,.35);
+
+}
+
+/* ===========================================================
+   SELECT BOX
+=========================================================== */
+
+div[data-baseweb="select"]{
+
+    border-radius:12px;
+
+}
+
+div[data-baseweb="select"] > div{
+
+    background:#161b22;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    color:white;
+
+}
+
+/* ===========================================================
+   FILE UPLOADER
+=========================================================== */
+
+[data-testid="stFileUploader"]{
+
+    background:#161b22;
+
+    border:2px dashed #5B6CFF;
+
+    border-radius:18px;
+
+    padding:20px;
+
+}
+
+[data-testid="stFileUploader"]:hover{
+
+    border-color:#7D4CFF;
+
+}
+
+/* ===========================================================
+   DATAFRAME
+=========================================================== */
+
+.stDataFrame{
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    border:1px solid rgba(255,255,255,.08);
+
+}
+
+/* ===========================================================
+   TABS
+=========================================================== */
+
+button[role="tab"]{
+
+    background:#161b22;
+
+    color:white;
+
+    border-radius:12px;
+
+    margin-right:8px;
+
+    transition:.25s;
+
+}
+
+button[role="tab"]:hover{
+
+    background:#5B6CFF;
+
+    color:white;
+
+}
+
+button[aria-selected="true"]{
+
+    background:#5B6CFF !important;
+
+    color:white !important;
+
+}
+
+/* ===========================================================
+   EXPANDER
+=========================================================== */
+
+details{
+
+    background:#161b22;
+
+    border-radius:16px;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    padding:8px;
+
+}
+
+/* ===========================================================
+   CHECKBOX
+=========================================================== */
+
+.stCheckbox{
+
+    padding:4px 0;
+
+}
+
+/* ===========================================================
+   PROGRESS BAR
+=========================================================== */
+
+.stProgress > div > div{
+
+    background:linear-gradient(
+
+        90deg,
+
+        #5B6CFF,
+
+        #7D4CFF
+
+    );
+
+}
+
+/* ===========================================================
+   PLOTLY CHARTS
+=========================================================== */
+
+.js-plotly-plot{
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+}
+
+/* ===========================================================
+   SCROLLBAR
+=========================================================== */
+
+::-webkit-scrollbar{
+
+    width:10px;
+
+}
+
+::-webkit-scrollbar-track{
+
+    background:#0d1117;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#3b4454;
+
+    border-radius:20px;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+    background:#5B6CFF;
+
+}
+
+/* ===========================================================
+   CAPTION
+=========================================================== */
+
+[data-testid="stCaptionContainer"]{
+
+    color:#9ca3af;
+
+}
+
+/* ===========================================================
+   INFO BOX
+=========================================================== */
+
+div[data-testid="stAlert"]{
+
+    border-radius:16px;
+
+}
+/* ===========================================================
+   GLASS EFFECTS
+=========================================================== */
+
+.stDataFrame,
+.js-plotly-plot,
+[data-testid="metric-container"],
+div[data-testid="stAlert"]{
+
+    backdrop-filter:blur(18px);
+
+    -webkit-backdrop-filter:blur(18px);
+
+}
+
+/* ===========================================================
+   CARD HOVER EFFECT
+=========================================================== */
+
+[data-testid="metric-container"]{
+
+    transition:
+
+        transform .25s ease,
+
+        box-shadow .25s ease,
+
+        border-color .25s ease;
+
+}
+
+[data-testid="metric-container"]:hover{
+
+    border-color:#5B6CFF;
+
+    transform:translateY(-6px);
+
+}
+
+/* ===========================================================
+   FADE ANIMATION
+=========================================================== */
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(18px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+.block-container{
+
+    animation:fadeUp .5s ease;
+
+}
+
+/* ===========================================================
+   BUTTON ANIMATION
+=========================================================== */
+
+.stButton button,
+.stDownloadButton button{
+
+    transition:
+
+        transform .2s ease,
+
+        box-shadow .2s ease,
+
+        background .2s ease;
+
+}
+
+.stButton button:active,
+.stDownloadButton button:active{
+
+    transform:scale(.98);
+
+}
+
+/* ===========================================================
+   METRICS
+=========================================================== */
+
+[data-testid="metric-container"] label{
+
+    font-size:.95rem;
+
+    color:#9ca3af;
+
+}
+
+[data-testid="metric-container"] [data-testid="stMetricValue"]{
+
+    font-size:1.8rem;
+
+    font-weight:700;
+
+    color:#ffffff;
+
+}
+
+/* ===========================================================
+   TABLES
+=========================================================== */
+
+thead tr{
+
+    background:#1f2937;
+
+}
+
+thead th{
+
+    color:white !important;
+
+}
+
+tbody tr:hover{
+
+    background:rgba(91,108,255,.08);
+
+}
+
+/* ===========================================================
+   LINKS
+=========================================================== */
+
+a{
+
+    color:#7D4CFF;
+
+    text-decoration:none;
+
+}
+
+a:hover{
+
+    color:#5B6CFF;
+
+}
+
+/* ===========================================================
+   IMAGE
+=========================================================== */
+
+img{
+
+    border-radius:14px;
+
+}
+
+/* ===========================================================
+   SPACING
+=========================================================== */
+
+.stTabs{
+
+    margin-top:1rem;
+
+}
+
+.stDataFrame{
+
+    margin-top:1rem;
+
+    margin-bottom:1rem;
+
+}
+
+.js-plotly-plot{
+
+    margin-top:.5rem;
+
+    margin-bottom:1rem;
+
+}
+
+/* ===========================================================
+   MOBILE
+=========================================================== */
+
+@media(max-width:992px){
+
+    .block-container{
+
+        padding-left:1rem;
+
+        padding-right:1rem;
+
+    }
+
+    h1{
+
+        font-size:2rem;
+
+    }
+
+    [data-testid="metric-container"]{
+
+        margin-bottom:1rem;
+
+    }
+
+}
+
+@media(max-width:768px){
+
+    .block-container{
+
+        padding-top:1rem;
+
+    }
+
+    h1{
+
+        font-size:1.7rem;
+
+    }
+
+    h2{
+
+        font-size:1.4rem;
+
+    }
+
+    h3{
+
+        font-size:1.2rem;
+
+    }
+
+}
+
+/* ===========================================================
+   FOOTER
+=========================================================== */
+
+footer{
+
+    visibility:hidden;
+
+}
+
+header{
+
+    background:transparent;
+
+}
+
+/* ===========================================================
+   END
+=========================================================== */

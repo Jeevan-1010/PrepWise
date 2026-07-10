@@ -1,69 +1,79 @@
 """
-frontend.app
+frontend/app.py
 
-Entry point for the PrepWise Streamlit application.
+PrepWise
+Application Entry Point
 """
 
-from __future__ import annotations
+import sys
+from pathlib import Path
 
 import streamlit as st
 
-from frontend.ui import PrepWiseUI
+# Add project root to Python path
+ROOT = Path(__file__).resolve().parent.parent
 
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-def configure_page() -> None:
-    """
-    Configure Streamlit page settings.
-    """
+from ui import PrepWiseUI
 
-    st.set_page_config(
-        page_title="PrepWise",
-        page_icon="assets/favicon.png",
-        layout="wide",
-        initial_sidebar_state="expanded",
+# -------------------------------------------------------
+# PAGE CONFIG
+# -------------------------------------------------------
+
+st.set_page_config(
+
+    page_title="PrepWise",
+
+    page_icon="",
+
+    layout="wide",
+
+    initial_sidebar_state="expanded",
+
+)
+
+# -------------------------------------------------------
+# OPTIONAL CSS
+# -------------------------------------------------------
+
+css = Path("assets/styles.css")
+
+if css.exists():
+
+    st.markdown(
+
+        f"<style>{css.read_text(encoding='utf-8')}</style>",
+
+        unsafe_allow_html=True,
+
     )
 
+# -------------------------------------------------------
+# SESSION STATE
+# -------------------------------------------------------
 
-def load_css() -> None:
-    """
-    Load custom CSS.
-    """
+DEFAULTS = {
 
-    try:
-        with open("assets/styles.css", "r", encoding="utf-8") as css:
-            st.markdown(
-                f"<style>{css.read()}</style>",
-                unsafe_allow_html=True,
-            )
-    except FileNotFoundError:
-        pass
+    "dataset": None,
 
+    "cleaned_dataset": None,
 
-def initialize_session() -> None:
+    "analysis": None,
 
-    defaults = {
-        "cleaned_df": None,
-        "analysis": None,
-        "report": None,
-    }
+    "ai_report": None,
 
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
+}
 
+for key, value in DEFAULTS.items():
 
-def main() -> None:
+    st.session_state.setdefault(key, value)
 
-    configure_page()
-
-    load_css()
-
-    initialize_session()
-
-    ui = PrepWiseUI()
-
-    ui.render()
-
+# -------------------------------------------------------
+# RUN APPLICATION
+# -------------------------------------------------------
 
 if __name__ == "__main__":
-    main()
+
+    PrepWiseUI().render()

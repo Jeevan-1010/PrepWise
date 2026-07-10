@@ -1,121 +1,138 @@
 """
-frontend.sidebar
-
-Sidebar component for PrepWise.
+frontend/sidebar.py
 """
-
-from __future__ import annotations
 
 import streamlit as st
 
 
 class Sidebar:
 
-    def __init__(self):
-        pass
-
     def render(self):
 
         with st.sidebar:
 
-            st.markdown(
-                """
-                # PrepWise
+            st.title("PrepWise")
 
-                **AI-Powered Data Preparation Platform**
-                """
+            st.caption(
+                "AI Powered Data Preparation Platform"
             )
 
             st.divider()
 
             uploaded_file = st.file_uploader(
+
                 "Upload Dataset",
+
                 type=[
+
                     "csv",
+
                     "xlsx",
+
                 ],
+
             )
 
             st.divider()
 
-            st.subheader("Cleaning Options")
+            st.subheader("Cleaning")
 
             fill_strategy = st.selectbox(
+
                 "Missing Value Strategy",
+
                 [
+
                     "mean",
+
                     "median",
+
                     "mode",
+
                 ],
+
             )
 
             remove_duplicates = st.checkbox(
+
                 "Remove Duplicate Rows",
+
                 value=True,
+
             )
 
             remove_outliers = st.checkbox(
+
                 "Remove Outliers",
+
                 value=True,
+
             )
 
             encode = st.checkbox(
-                "Encode Categorical Columns",
+
+                "Label Encode",
+
                 value=False,
+
             )
 
-            standardize = st.checkbox(
-                "Standard Scale",
-                value=False,
+            scaling = st.selectbox(
+
+                "Scaling",
+
+                [
+
+                    "None",
+
+                    "Standard",
+
+                    "MinMax",
+
+                ],
+
             )
 
             st.divider()
 
-            st.subheader("Machine Learning")
+            st.subheader("AI")
 
-            run_clustering = st.checkbox(
-                "KMeans Clustering",
-                value=True,
-            )
+            generate_ai = st.button(
 
-            run_outlier_detection = st.checkbox(
-                "Isolation Forest",
-                value=True,
-            )
+                "Generate AI Report",
 
-            run_pca = st.checkbox(
-                "PCA Projection",
-                value=True,
-            )
-
-            st.divider()
-
-            analyze = st.button(
-                "Analyze Dataset",
                 use_container_width=True,
+
             )
 
-            clean = st.button(
+            st.divider()
+
+            clean_data = st.button(
+
                 "Clean Dataset",
-                use_container_width=True,
-            )
 
-            ai = st.button(
-                "AI Recommendations",
+                type="primary",
+
                 use_container_width=True,
+
             )
 
             return {
-                "file": uploaded_file,
+
+                "uploaded_file": uploaded_file,
+
                 "fill_strategy": fill_strategy,
+
                 "remove_duplicates": remove_duplicates,
+
                 "remove_outliers": remove_outliers,
+
                 "encode": encode,
-                "standardize": standardize,
-                "run_clustering": run_clustering,
-                "run_outlier_detection": run_outlier_detection,
-                "run_pca": run_pca,
-                "analyze": analyze,
-                "clean": clean,
-                "ai": ai,
+
+                "scaling": scaling,
+
+                "clean_data": clean_data,
+
+                "generate_ai": generate_ai,
+
             }

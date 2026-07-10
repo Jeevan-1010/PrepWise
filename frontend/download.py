@@ -1,10 +1,6 @@
 """
-frontend.download
-
-Download page for PrepWise.
+frontend/download.py
 """
-
-from __future__ import annotations
 
 import streamlit as st
 
@@ -17,54 +13,108 @@ from backend.exporter import (
 
 class DownloadPage:
 
-    def __init__(
-        self,
-        dataframe,
-        report=None,
-    ):
+    def __init__(self, dataframe, analysis=None):
+
         self.df = dataframe
-        self.report = report
+
+        self.analysis = analysis
 
     def render(self):
 
-        st.title("Export")
+        st.header("Download Center")
 
         st.write(
-            "Download your cleaned dataset and analysis reports."
+            "Export the processed dataset and analysis report."
         )
 
         st.divider()
 
-        csv_data = export_csv(self.df)
+        csv_data = export_csv(
 
-        st.download_button(
-            label="Download CSV",
-            data=csv_data,
-            file_name="prepwise_cleaned.csv",
-            mime="text/csv",
-            use_container_width=True,
+            self.df,
+
         )
 
-        excel_data = export_excel(self.df)
+        excel_data = export_excel(
 
-        st.download_button(
-            label="Download Excel",
-            data=excel_data,
-            file_name="prepwise_cleaned.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True,
+            self.df,
+
         )
 
-        if self.report is not None:
+        col1, col2 = st.columns(2)
 
-            report_data = export_report(self.report)
+        with col1:
 
             st.download_button(
-                label="Download Analysis Report",
-                data=report_data,
-                file_name="prepwise_report.txt",
-                mime="text/plain",
+
+                label="Download CSV",
+
+                data=csv_data,
+
+                file_name="prepwise_cleaned_dataset.csv",
+
+                mime="text/csv",
+
                 use_container_width=True,
+
             )
 
-        st.success("Your files are ready for download.")
+        with col2:
+
+            st.download_button(
+
+                label="Download Excel",
+
+                data=excel_data,
+
+                file_name="prepwise_cleaned_dataset.xlsx",
+
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+
+                use_container_width=True,
+
+            )
+
+        st.divider()
+
+        if self.analysis is not None:
+
+            report = export_report(
+
+                self.analysis,
+
+            )
+
+            st.download_button(
+
+                label="Download Analysis Report",
+
+                data=report,
+
+                file_name="prepwise_analysis_report.txt",
+
+                mime="text/plain",
+
+                use_container_width=True,
+
+            )
+
+        if st.session_state.get(
+
+            "ai_report",
+
+        ):
+
+            st.download_button(
+
+                label="Download AI Report",
+
+                data=st.session_state["ai_report"],
+
+                file_name="prepwise_ai_report.md",
+
+                mime="text/markdown",
+
+                use_container_width=True,
+
+            )

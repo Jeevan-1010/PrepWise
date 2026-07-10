@@ -1,7 +1,7 @@
 """
 backend.ai
 
-Gemini AI integration for PrepWise.
+Groq AI integration for PrepWise.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ import os
 from typing import Optional
 
 from dotenv import load_dotenv
-from google import genai
+from groq import Groq
 
 
 load_dotenv()
@@ -18,26 +18,63 @@ load_dotenv()
 
 class AIService:
     """
-    Gemini AI service.
+    Groq AI service.
     """
 
     def __init__(self) -> None:
 
-        api_key = os.getenv("GEMINI_API_KEY")
+        api_key = os.getenv("GROQ_API_KEY")
 
         if not api_key:
             raise ValueError(
-                "GEMINI_API_KEY not found in environment variables."
+                "GROQ_API_KEY not found in environment variables."
             )
 
-        self.client = genai.Client(api_key=api_key)
+        self.client = Groq(
+            api_key=api_key
+        )
 
-        self.model = "gemini-2.5-flash"
+        # Fast + excellent for analysis
+        self.model = "llama-3.3-70b-versatile"
 
     # -------------------------------------------------------
     # Generic Prompt
     # -------------------------------------------------------
 
+    def ask(
+        self,
+        prompt: str,
+    ) -> str:
+
+        try:
+
+            response = self.client.chat.completions.create(
+
+                model=self.model,
+
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are PrepWise AI, an expert data scientist "
+                            "and machine learning assistant."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    },
+                ],
+
+                temperature=0.3,
+                max_tokens=1200,
+            )
+
+            return response.choices[0].message.content
+
+        except Exception as exc:
+
+            return f"AI Error:\n\n{str(exc)}"
     def ask(
         self,
         prompt: str,
@@ -50,6 +87,9 @@ class AIService:
 
         return response.text
 
+    # -------------------------------------------------------
+    # Dataset Analysis
+    # -------------------------------------------------------
     # -------------------------------------------------------
     # Dataset Analysis
     # -------------------------------------------------------
@@ -72,21 +112,15 @@ Dataset Summary
 
 Explain:
 
-1. Overall quality
-
+1. Overall data quality
 2. Missing values
-
 3. Duplicate rows
-
 4. Potential issues
-
 5. Recommended preprocessing
-
-6. Suggested ML models
-
+6. Suitable machine learning models
 7. Business insights
 
-Respond in professional markdown.
+Respond professionally using Markdown.
 """
 
         return self.ask(prompt)
@@ -109,14 +143,14 @@ Dataset Information
 
 Suggest:
 
-- Missing value strategy
-- Outlier handling
-- Encoding
-- Scaling
-- Feature engineering
-- ML readiness
+• Missing value strategy
+• Outlier handling
+• Encoding
+• Scaling
+• Feature engineering
+• ML readiness
 
-Explain every recommendation.
+Explain every recommendation clearly.
 """
 
         return self.ask(prompt)
@@ -131,7 +165,7 @@ Explain every recommendation.
     ) -> str:
 
         prompt = f"""
-Columns
+Dataset Columns
 
 {columns}
 
@@ -139,17 +173,19 @@ Suggest useful feature engineering ideas.
 
 Include:
 
-- Encoding
-- Scaling
-- Feature combinations
-- Date features
-- Target leakage warnings
+• Encoding
+• Scaling
+• Feature combinations
+• Date features
+• Target leakage warnings
+
+Respond in Markdown.
 """
 
         return self.ask(prompt)
 
     # -------------------------------------------------------
-    # Dashboard Insights
+    # Executive Dashboard Summary
     # -------------------------------------------------------
 
     def dashboard_summary(
@@ -158,15 +194,18 @@ Include:
     ) -> str:
 
         prompt = f"""
-Generate an executive summary.
+Generate an executive summary for this dataset.
 
 Dataset
 
 {report}
 
-Keep it concise.
+Requirements:
 
-Maximum 250 words.
+• Maximum 250 words
+• Professional tone
+• Mention data quality
+• Mention possible ML use cases
 """
 
         return self.ask(prompt)
@@ -182,13 +221,15 @@ Maximum 250 words.
     ) -> str:
 
         prompt = f"""
-Context
+Dataset Context
 
 {context}
 
-Question
+User Question
 
 {message}
+
+Answer clearly and professionally.
 """
 
         return self.ask(prompt)

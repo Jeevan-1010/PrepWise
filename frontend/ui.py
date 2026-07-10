@@ -1,113 +1,139 @@
 """
-frontend.ui
-
-Main UI controller for PrepWise.
+frontend/ui.py
 """
 
-from __future__ import annotations
-
+import pandas as pd
 import streamlit as st
 
-from frontend.sidebar import Sidebar
-from frontend.dashboard import Dashboard
-from frontend.cleaning import CleaningPage
-from frontend.download import DownloadPage
+from sidebar import Sidebar
+from dashboard import Dashboard
+from cleaning import CleaningPage
+from analysis import AnalysisPage
+from download import DownloadPage
+
+from backend.analyzer import DatasetAnalyzer
 
 
 class PrepWiseUI:
-    """
-    Main UI Controller.
-    """
 
     def __init__(self):
 
         self.sidebar = Sidebar()
 
+    def load_dataset(self, uploaded_file):
+
+        if uploaded_file.name.lower().endswith(".csv"):
+
+            return pd.read_csv(uploaded_file)
+
+        elif uploaded_file.name.lower().endswith(".xlsx"):
+
+            return pd.read_excel(uploaded_file)
+
+        return None
+
     def render(self):
 
         options = self.sidebar.render()
 
-        uploaded_file = options["file"]
+        uploaded_file = options["uploaded_file"]
+
+        st.title("PrepWise")
+
+        st.caption(
+            "AI Powered Data Preparation Platform"
+        )
+
+        st.divider()
 
         if uploaded_file is None:
 
-            st.title("PrepWise")
-
-            st.markdown(
-                """
-# AI-Powered Data Preparation Platform
-
-Welcome to **PrepWise**.
-
-Upload a dataset from the sidebar to:
-
-- Analyze your data
-- Clean missing values
-- Detect outliers
-- Explore visualizations
-- Generate AI insights
-- Download the cleaned dataset
-                """
+            st.info(
+                "Upload a CSV or Excel dataset from the sidebar."
             )
 
             return
 
-        try:
+        if (
 
-            import pandas as pd
+            st.session_state["dataset"] is None
 
-            if uploaded_file.name.endswith(".csv"):
+            or
 
-                df = pd.read_csv(uploaded_file)
+            uploaded_file.name != st.session_state.get(
+                "dataset_name"
+            )
 
-            else:
+        ):
 
-                df = pd.read_excel(uploaded_file)
+            df = self.load_dataset(uploaded_file)
 
-        except Exception as exc:
+            st.session_state["dataset"] = df
 
-            st.error(f"Unable to load dataset.\n\n{exc}")
+            st.session_state["dataset_name"] = uploaded_file.name
 
-            return
+            st.session_state["cleaned_dataset"] = df.copy()
 
-        # --------------------------------------------------
-        # Dashboard
-        # --------------------------------------------------
+            st.session_state["analysis"] = None
 
-        dashboard = Dashboard(df)
+            st.session_state["ai_report"] = None
 
-        dashboard.render()
+        original_df = st.session_state["dataset"]
 
-        st.divider()
+        cleaned_df = st.session_state["cleaned_dataset"]
 
-        # --------------------------------------------------
-        # Cleaning
-        # --------------------------------------------------
+        # ----------------------------------------------------
+        # DATASET OVERVIEW
+        # ----------------------------------------------------
 
-        cleaning = CleaningPage(df)
-
-        cleaned_df = cleaning.render()
+        Dashboard(cleaned_df).render()
 
         st.divider()
 
-        # --------------------------------------------------
-        # Download
-        # --------------------------------------------------
+        # ----------------------------------------------------
+        # CLEANING
+        # ----------------------------------------------------
 
-        if cleaned_df is None:
+        cleaned_df = CleaningPage(
 
-            cleaned_df = df
-
-        report = {
-            "Rows": len(cleaned_df),
-            "Columns": len(cleaned_df.columns),
-            "Missing Values": int(cleaned_df.isna().sum().sum()),
-            "Duplicate Rows": int(cleaned_df.duplicated().sum()),
-        }
-
-        download = DownloadPage(
             cleaned_df,
-            report,
+
+        ).render()
+
+        st.session_state["cleaned_dataset"] = cleaned_df
+
+        st.divider()
+
+        # ----------------------------------------------------
+        # ANALYSIS
+        # ----------------------------------------------------
+
+        analyzer = DatasetAnalyzer(
+
+            cleaned_df,
+
         )
 
-        download.render()
+        analysis = analyzer.analyze()
+
+        st.session_state["analysis"] = analysis
+
+        AnalysisPage(
+
+            cleaned_df,
+
+        ).render()
+
+        st.divider()
+
+        # ----------------------------------------------------
+        # DOWNLOADS
+        # ----------------------------------------------------
+
+        DownloadPage(
+
+            cleaned_df,
+
+            analysis,
+
+        ).render()
