@@ -75,17 +75,17 @@ class AIService:
         except Exception as exc:
 
             return f"AI Error:\n\n{str(exc)}"
-    def ask(
-        self,
-        prompt: str,
-    ) -> str:
+   # def ask(
+    #    self,
+     #   prompt: str,
+    #) -> str:
 
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=prompt,
-        )
+     #   response = self.client.models.generate_content(
+      #      model=self.model,
+       #     contents=prompt,
+        #)
 
-        return response.text
+        #return response.text
 
     # -------------------------------------------------------
     # Dataset Analysis
