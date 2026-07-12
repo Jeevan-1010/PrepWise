@@ -94,7 +94,7 @@ class AnalysisPage:
 
             with st.spinner(
 
-                "Analyzing dataset with Gemini..."
+                "Analyzing your dataset and generating AI insights..."
 
             ):
 
